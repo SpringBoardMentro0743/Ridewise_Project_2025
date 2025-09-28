@@ -22,27 +22,38 @@ It uses _Machine Learning models_ such as Random Forest, XGBoost, LightGBM, and 
 
 ## 📂 Project Structure
 
-intern/ │── .streamlit/ # Streamlit configuration
+bike-demand-prediction/
+│── .streamlit/ # Streamlit configuration
 │ └── config.toml
-│── analysis.ipynb # Data analysis & model building notebook
+│
+│── notebooks/ # Jupyter notebooks
+│ └── analysis.ipynb
+│
+│── data/ # Datasets
+│ ├── hour.csv # Original dataset
+│ └── preprocessed_bike.csv # Preprocessed dataset
+│
+│── models/ # Saved ML models
+│ ├── lgbm_best_model.pkl # Trained LightGBM model
+│ ├── xgb_best_model.pkl # Trained XGBoost model
+│ ├── xgb_bike_model.pkl # Another XGBoost model
+│ ├── xgboost_best_model.pkl # Best XGBoost model
+│ ├── features.pkl # Saved features
+│ ├── scaler.pkl # Data scaler object
+│ └── thresholds.pkl # Threshold values
+│
+│── outputs/ # Results & visualizations
+│ ├── feature_importance.csv
+│ ├── model_comparison.csv
+│ ├── plot_by_hour.png
+│ ├── plot_by_season.png
+│ ├── plot_correlation.png
+│ └── plot_temp_vs_cnt.png
+│
 │── app.py # Main Streamlit web application
-│── feature_importance.csv # Feature importance scores
-│── features.pkl # Saved feature data
-│── hour.csv # Original dataset
-│── lgbm_best_model.pkl # Trained LightGBM model
-│── model_comparison.csv # Model comparison results
-│── plot_by_hour.png # Visualization - usage by hour
-│── plot_by_season.png # Visualization - usage by season
-│── plot_correlation.png # Correlation heatmap
-│── plot_temp_vs_cnt.png # Visualization - temp vs. demand
-│── preprocessed_bike.csv # Preprocessed dataset
-│── README.md # Project documentation
 │── requirements.txt # Dependencies
-│── scaler.pkl # Data scaler object
-│── thresholds.pkl # Threshold values
-│── xgb_best_model.pkl # Trained XGBoost model
-│── xgb_bike_model.pkl # Another saved XGBoost model
-│── xgboost_best_model.pkl # Best performing XGBoost model
+│── README.md # Project documentation
+│── LICENSE # License (if added)
 
 ## 📂 About the Dataset
 
