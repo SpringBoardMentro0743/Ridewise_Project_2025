@@ -96,6 +96,10 @@ Visualizations such as hourly trends, seasonal demand, and correlations provide 
 Contributions, issues, and feature requests are welcome!
 Feel free to fork this repo and create pull requests.
 
+## 🚀 Live Demo
+
+Check out the deployed app here: [Bike Demand Prediction App](https://bikprediction.streamlit.app/)
+
 📜 License
 
 This project is licensed under the MIT License.
