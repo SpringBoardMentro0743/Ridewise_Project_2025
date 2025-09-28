@@ -1,99 +1,93 @@
+# app.py
+import os
 import streamlit as st
 import pandas as pd
 import joblib
 
-# ------------------- Load trained model -------------------
-model = joblib.load("lgbm_best_model.pkl")
+st.set_page_config(page_title="Bike Demand Prediction", layout="wide")
 
-# ------------------- Custom CSS for Text Size -------------------
-st.markdown(
-    """
-    <style>
-    /* Title size */
-    .title {
-        font-size: 40px !important;
-        font-weight: bold;
-        text-align: center;
+# ---------------- Load Model ----------------
+def load_model_try(names):
+    for name in names:
+        if os.path.exists(name):
+            try:
+                mdl = joblib.load(name)
+                return mdl, name, None
+            except Exception as e:
+                return None, name, f"Error loading {name}: {e}"
+    return None, None, "No model file found. Tried: " + ", ".join(names)
+
+possible_models = [
+    "lgbm_best_model.pkl",
+    "xgb_best_model.pkl",
+    "xgb_bike_model.pkl",
+    "model.pkl",
+    "bike_demand_model.pkl"
+]
+
+model, used_name, load_err = load_model_try(possible_models)
+
+# ---------------- Custom CSS ----------------
+st.markdown("""
+<style>
+    div.block-container {
+        padding-top: 2rem !important;  /* fix heading cut */
+        padding-bottom: 0rem;
     }
-
-    /* Subheader size */
-    .subheader {
-        font-size: 22px !important;
-        text-align: center;
-        color: gray;
+    .stSlider, .stSelectbox, .stRadio {
+        margin-bottom: -15px;  /* compact spacing */
     }
-
-    /* General text size */
-    .stMarkdown, .stText, p {
-        font-size: 18px !important;
+    h1 {
+        margin-top: 0.5rem;   /* fix title margin */
     }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+</style>
+""", unsafe_allow_html=True)
 
-# ------------------- Page Header -------------------
-st.markdown("<div class='title'>🚲 Bike Sharing Demand Prediction</div>", unsafe_allow_html=True)
-st.markdown("<div class='subheader'>Enter details below to predict bike rental demand</div>", unsafe_allow_html=True)
+# ---------------- Header ----------------
+st.markdown("""
+<h1 style='text-align:center;color:#F5D5E0;margin-bottom:0;'>🚲 Bike Sharing Demand</h1>
+<p style='text-align:center;color:gray;margin-top:-8px;margin-bottom:12px;'>
+Quick forecast of bike rentals — set inputs & predict instantly
+</p>
+""", unsafe_allow_html=True)
 
-# ------------------- Sidebar -------------------
-with st.sidebar:
-    st.title("About this App")
-    st.write("""
-    🚲 *Bike Sharing Demand Prediction App*  
+# ---------------- Input Layout (3 columns) ----------------
+col1, col2, col3 = st.columns(3)
 
-    This app predicts bike rental demand based on:  
-    - 🌡 Temperature (°C)  
-    - 🤒 Feels Like Temp (°C)  
-    - 💧 Humidity (%)  
-    - 🍃 Windspeed (km/h)  
-    - 📅 Day, Month & Hour  
-    - 🎉 Holiday / Working Day  
-    - 🌦 Weather Conditions  
+with col1:
+    season = st.selectbox("Season", ["Winter","Spring","Summer","Fall"])
+    month_name = st.selectbox("Month", 
+        ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], index=5)
+    weekday = st.selectbox("Day of Week", 
+        ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"])
+    hour = st.selectbox("Hour (24h)", list(range(0,24)), index=12)
 
-    🔧 *Model Used*: LightGBM  
-    👩‍💻 *Created by*: Banothu Anusha  
-    """)
+with col2:
+    workingday = st.radio("Working Day?", ["Yes","No"], horizontal=True)
+    holiday = st.radio("Holiday?", ["Yes","No"], horizontal=True)
+    weathersit = st.selectbox("Weather", ["Clear","Mist","Light Snow/Rain","Heavy Rain"])
 
-# ------------------- Main UI -------------------
-st.subheader("🔽 Input Features")
+with col3:
+    temp = st.slider("Temperature (°C)", 0, 40, 20)
+    atemp = st.slider("Feels-like Temp (°C)", 0, 45, 25)
+    humidity = st.slider("Humidity (%)", 0, 100, 50)
+    windspeed = st.slider("Windspeed (km/h)", 0, 50, 10)
 
-season = st.selectbox("🍂 Season", ["Winter", "Spring", "Summer", "Fall"])
+# ---------------- Preprocess Inputs ----------------
+month_map = {"Jan":1,"Feb":2,"Mar":3,"Apr":4,"May":5,"Jun":6,
+             "Jul":7,"Aug":8,"Sep":9,"Oct":10,"Nov":11,"Dec":12}
+month = month_map[month_name]
+workingday_val = 1 if workingday=="Yes" else 0
+holiday_val = 1 if holiday=="Yes" else 0
 
-# Month mapping dictionary
-months = {
-    "January": 1, "February": 2, "March": 3, "April": 4,
-    "May": 5, "June": 6, "July": 7, "August": 8,
-    "September": 9, "October": 10, "November": 11, "December": 12
-}
-month_name = st.selectbox("📆 Month", list(months.keys()), index=5)  # June default
-month = months[month_name]
-
-hour = st.selectbox("🕒 Hour of Day", list(range(1, 25)), index=12)
-weekday = st.selectbox("📅 Day of Week",
-                       ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"])
-workingday = st.radio("🏢 Working Day?", [0, 1],
-                      format_func=lambda x: "Yes" if x == 1 else "No")
-holiday = st.radio("🎉 Holiday?", [0, 1],
-                   format_func=lambda x: "Yes" if x == 1 else "No")
-weathersit = st.selectbox("🌦 Weather",
-                          ["Clear", "Mist", "Light Snow/Rain", "Heavy Rain"])
-
-# Sliders
-temp = st.slider("🌡 Temperature (°C)", 0, 40, 20)
-atemp = st.slider("🤒 Feels-like Temp (°C)", 0, 45, 25)
-humidity = st.slider("💧 Humidity (%)", 0, 100, 50)
-windspeed = st.slider("🍃 Windspeed (km/h)", 0, 50, 10)
-
-# ------------------- Prepare Input -------------------
-input_data = pd.DataFrame([{
-    "yr": 1,
-    "holiday": holiday,
-    "workingday": workingday,
-    "temp": temp / 40,
-    "atemp": atemp / 50,
-    "hum": humidity / 100,
-    "windspeed": windspeed / 67,
+input_df = pd.DataFrame([{
+    "yr":1,
+    "holiday": holiday_val,
+    "workingday": workingday_val,
+    "temp": temp/40,
+    "atemp": atemp/50,
+    "hum": humidity/100,
+    "windspeed": windspeed/67,
     "season": season,
     "mnth": month,
     "hr": hour,
@@ -101,78 +95,72 @@ input_data = pd.DataFrame([{
     "weathersit": weathersit
 }])
 
-input_data = pd.get_dummies(input_data,
-                            columns=["season","mnth","hr","weekday","weathersit"],
-                            drop_first=True)
+# Extra engineered features
+input_df["comfort_index"] = (temp/40 + atemp/50)/2 - (humidity/100)
+input_df["temp_wind_interaction"] = (temp/40) * (windspeed/67)
 
-input_data["comfort_index"] = (temp/40 + atemp/50)/2 - (humidity/100)
-input_data["temp_wind_interaction"] = (temp/40) * (windspeed/67)
+# ---------------- Prediction ----------------
+if model is None:
+    st.error(f"Model not loaded. {load_err}")
+    st.info("Place your model file in the same folder as app.py. Possible names: " + ", ".join(possible_models))
+else:
+    if st.button("🚀 Predict Demand", use_container_width=True):
+        try:
+            # expand categorical variables
+            expanded = pd.get_dummies(
+                input_df, 
+                columns=["season","mnth","hr","weekday","weathersit"],
+                drop_first=True
+            )
 
-expected_features = model.feature_name_ if hasattr(model, "feature_name_") else None
-if expected_features:
-    for col in expected_features:
-        if col not in input_data.columns:
-            input_data[col] = 0
-    input_data = input_data[expected_features]
+            # get expected features from model
+            if hasattr(model, "feature_names_in_"):
+                expected_features = list(model.feature_names_in_)
+            elif hasattr(model, "booster_") and hasattr(model.booster_, "feature_name"):
+                expected_features = list(model.booster_.feature_name())
+            else:
+                expected_features = expanded.columns.tolist()
 
+            # add missing cols
+            for col in expected_features:
+                if col not in expanded.columns:
+                    expanded[col] = 0
+            expanded = expanded[expected_features]
 
- # ------------------- Thresholds -------------------
-threshold = 150   # cutoff for low vs high
+            # predict
+            prediction = model.predict(expanded)[0]
 
+            # classify demand (Low, Medium, High)
+            if prediction < 130:
+                demand_status = "🔴 Low Demand"
+                color = "#FF5252"  # red
+            elif 130 <= prediction < 150:
+                demand_status = "🟡 Medium Demand"
+                color = "#FFD700"  # yellow/golden
+            else:
+                demand_status = "🟢 High Demand"
+                color = "#2E7D32"  # green
 
-# ------------------- Prediction -------------------
-if st.button("🚀 Predict Demand"):
-    prediction = model.predict(input_data)[0]
+            # display result
+            st.markdown(
+                f"<div style='padding:12px;border-radius:10px;background:{color};color:white;font-weight:bold;text-align:center;'>"
+                f"{demand_status}<br><span style='font-size:22px'>Predicted rentals: {int(prediction)}</span>"
+                "</div>", 
+                unsafe_allow_html=True
+            )
 
-    if prediction < threshold:
-        demand_status = "🔴 Low Demand"
-        bg_color = "linear-gradient(135deg, #FF5252, #D32F2F)"
-    else:
-        demand_status = "🟢 High Demand"
-        bg_color = "linear-gradient(135deg, #66BB6A, #2E7D32)"
+            # extra friendly note
+            st.success("✅ Prediction generated successfully! Adjust inputs above to explore different scenarios.")
 
-    # Show prediction box
-    st.markdown(f"""  
-        <div style="  
-            background: {bg_color};  
-            padding: 25px;  
-            border-radius: 15px;  
-            text-align: center;  
-            color: white;  
-            font-size: 28px;  
-            font-weight: bold;  
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.3);  
-        ">  
-            {demand_status}<br>  
-            ✅ Predicted Bike Rentals: {int(prediction)} 🚴‍♂  
-        </div>  
-    """, unsafe_allow_html=True)
+        except Exception as e:
+            st.error("Prediction failed.")
+            st.exception(e)
 
-    # ------------------- Demand Comparison -------------------
-    import matplotlib.pyplot as plt
-
-    st.markdown("### 📊 Demand Comparison")
-
-    demand_levels = ["Low Demand (<150)", "High Demand (≥150)", "Your Prediction"]
-    demand_values = [threshold - 1, threshold, int(prediction)]
-    colors = ["#FF5252", "#66BB6A", "#42A5F5"]  # red, green, blue
-
-    fig, ax = plt.subplots()
-    bars = ax.bar(demand_levels, demand_values, color=colors)
-
-    # Add labels on top of bars
-    for bar in bars:
-        height = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2., height + 5,
-                f'{int(height)}', ha='center', va='bottom', fontsize=10, fontweight='bold')
-
-    ax.set_ylabel("Bike Rentals")
-    ax.set_title("Demand Comparison")
-    st.pyplot(fig)
-
-    # ------------------- Summary -------------------
-    st.markdown(f"""
-    ### 📝 Summary
-    Based on the inputs, the predicted bike rental demand is *{demand_status}*  
-    with an expected count of *{int(prediction)} bikes*.
-    """)
+# ---------------- Footer ----------------
+st.markdown("<hr style='margin-top:5px;margin-bottom:5px;'>", unsafe_allow_html=True)
+st.markdown(
+    "<div style='text-align:center;color:gray;font-size:13px;'>"
+    "🚲 Bike Demand Prediction Project | Developed by <b>Banothu Anusha</b> | Powered by Machine Learning"
+    "</div>", 
+    unsafe_allow_html=True
+)

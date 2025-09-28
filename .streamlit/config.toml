@@ -1,5 +1,5 @@
 [theme]
-primaryColor="#1E90FF"          # Dodger Blue (sliders, buttons)
-backgroundColor="#CECCD0"       # Very light ash background
-secondaryBackgroundColor="#87CEEB"  # Sky blue panels
-textColor="#000000"             # Black text
+primaryColor="#7B337E"          # Dodger Blue (sliders, buttons)
+backgroundColor="#210635"       # Very light ash background
+secondaryBackgroundColor="#7B337E"  # Sky blue panels
+textColor="#949478"             # Black text
