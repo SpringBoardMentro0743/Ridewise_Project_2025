@@ -22,38 +22,7 @@ It uses _Machine Learning models_ such as Random Forest, XGBoost, LightGBM, and 
 
 ## 📂 Project Structure
 
-bike-demand-prediction/
-│── .streamlit/ # Streamlit configuration
-│ └── config.toml
-│
-│── notebooks/ # Jupyter notebooks
-│ └── analysis.ipynb
-│
-│── data/ # Datasets
-│ ├── hour.csv # Original dataset
-│ └── preprocessed_bike.csv # Preprocessed dataset
-│
-│── models/ # Saved ML models
-│ ├── lgbm_best_model.pkl # Trained LightGBM model
-│ ├── xgb_best_model.pkl # Trained XGBoost model
-│ ├── xgb_bike_model.pkl # Another XGBoost model
-│ ├── xgboost_best_model.pkl # Best XGBoost model
-│ ├── features.pkl # Saved features
-│ ├── scaler.pkl # Data scaler object
-│ └── thresholds.pkl # Threshold values
-│
-│── outputs/ # Results & visualizations
-│ ├── feature_importance.csv
-│ ├── model_comparison.csv
-│ ├── plot_by_hour.png
-│ ├── plot_by_season.png
-│ ├── plot_correlation.png
-│ └── plot_temp_vs_cnt.png
-│
-│── app.py # Main Streamlit web application
-│── requirements.txt # Dependencies
-│── README.md # Project documentation
-│── LICENSE # License (if added)
+bike-demand-prediction/ │── .streamlit/ # Streamlit configuration │ └── config.toml │ │── notebooks/ # Jupyter notebooks │ └── analysis.ipynb │ │── data/ # Datasets │ ├── hour.csv # Original dataset │ └── preprocessed_bike.csv # Preprocessed dataset │ │── models/ # Saved ML models │ ├── lgbm_best_model.pkl # Trained LightGBM model │ ├── xgb_best_model.pkl # Trained XGBoost model │ ├── xgb_bike_model.pkl # Another XGBoost model │ ├── xgboost_best_model.pkl # Best XGBoost model │ ├── features.pkl # Saved features │ ├── scaler.pkl # Data scaler object │ └── thresholds.pkl # Threshold values │ │── outputs/ # Results & visualizations │ ├── feature_importance.csv │ ├── model_comparison.csv │ ├── plot_by_hour.png │ ├── plot_by_season.png │ ├── plot_correlation.png │ └── plot_temp_vs_cnt.png │ │── app.py # Main Streamlit web application │── requirements.txt # Dependencies │── README.md # Project documentation │── LICENSE # License (if added)
 
 ## 📂 About the Dataset
 
