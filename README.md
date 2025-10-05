@@ -22,7 +22,6 @@ It uses _Machine Learning models_ such as Random Forest, XGBoost, LightGBM, and 
 
 ## 📂 Project Structure
 
-'''
 bike-demand-prediction/
 │── .streamlit/ # Streamlit configuration
 │ └── config.toml
@@ -55,7 +54,6 @@ bike-demand-prediction/
 │── requirements.txt # Dependencies
 │── README.md # Project documentation
 │── LICENSE # License (if added)
-'''
 
 ## 📂 About the Dataset
 
