@@ -1,0 +1,4 @@
+model,MAE,RMSE,R2,Adjusted_R2,Best_Params,Train_Time
+XGBoost,0.0546110048890113,0.0832246164987639,0.9999998807907104,0.9999998801698288,"{'subsample': 1.0, 'n_estimators': 500, 'max_depth': 10, 'learning_rate': 0.1, 'colsample_bytree': 1.0}",27.730578422546387
+GradientBoosting,0.299457015129529,0.4032259462566007,0.9999965685930784,0.9999965507211674,"{'subsample': 0.9, 'n_estimators': 500, 'max_depth': 6, 'learning_rate': 0.2}",145.32606863975525
+RandomForest,2.5076933701657453,4.294221008516164,0.9996190500267584,0.999617729728792,"{'n_estimators': 100, 'max_features': 0.3, 'max_depth': None}",60.63601446151733

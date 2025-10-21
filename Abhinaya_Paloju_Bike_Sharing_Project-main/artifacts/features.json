@@ -1,0 +1,1 @@
+{"features": ["instant", "season", "yr", "mnth", "hr", "holiday", "weekday", "workingday", "weathersit", "temp", "atemp", "hum", "windspeed", "hour", "day_of_week", "month", "is_weekend", "hour_sin", "hour_cos", "dow_sin", "dow_cos", "month_sin", "month_cos", "cnt_lag1", "cnt_lag24", "cnt_roll3", "cnt_roll6", "cnt_roll12", "hour_temp", "hour_humidity", "temp_humidity"]}
