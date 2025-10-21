@@ -1,195 +1,180 @@
+# app.py
 import streamlit as st
-import pandas as pd
-import altair as alt
-import pickle
 import numpy as np
+import joblib
+import pandas as pd
+import matplotlib.pyplot as plt
+import datetime
 
-# ---------------------------
-# Page Config
-# ---------------------------
-st.set_page_config(page_title="Ridewise - Bike Rentals Predictor", layout="wide")
+# -------------------------------
+# Page config
+# -------------------------------
+st.set_page_config(page_title="AI RideWise - Hourly Prediction", layout="wide")
 
-# ---------------------------
-# Title and Subtitle
-# ---------------------------
-st.markdown(
-    "<h1 style='text-align: center; color:#FF69B4; font-style:italic; font-size:48px;'>🚲 Ridewise</h1>",
-    unsafe_allow_html=True
-)
+# -------------------------------
+# Force white background & black text
+# -------------------------------
+st.markdown("""
+<style>
+/* Main background & text */
+.stApp {
+    background-color: #ffffff !important;
+    color: #0b0b0b !important;
+}
 
-st.markdown(
-    "<h2 style='text-align: center; color:#2E86AB; font-size:28px;'>🚀 Bike Sharing Demand Prediction App 🚲</h2>",
-    unsafe_allow_html=True
-)
+/* Headers */
+h1, h2, h3, h4, h5, h6, p, label, .stMarkdown {
+    color: #0b0b0b !important;
+}
 
-# ---------------------------
-# Load Dataset
-# ---------------------------
-st.header("📊 Bike Rentals Sample Dataset")
-hour = pd.read_csv("/home/vibhuti/Documents/hour.csv")
+/* Predict button only */
+.stButton button {
+    background-color: #e63946 !important;  /* Red background */
+    color: white !important;               /* White text */
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-weight: bold;
+}
+.stButton button:hover {
+    background-color: #d62839 !important; /* Darker red on hover */
+}
+</style>
+""", unsafe_allow_html=True)
 
-# Map season numbers to names
-season_map = {1: "spring", 2: "summer", 3: "fall", 4: "winter"}
-hour["season"] = hour["season"].map(season_map)
-
-# Convert normalized temps to Celsius
-hour["temp_c"] = hour["temp"] * 100
-hour["atemp_c"] = hour["atemp"] * 100
-
-st.dataframe(hour.head())
-
-# ---------------------------
-# Analytics Section
-# ---------------------------
-st.header("📈 Bike Rentals Analytics")
-
-scale = alt.Scale(
-    domain=["spring", "summer", "fall", "winter"],
-    range=["#e7ba52", "#aec7e8", "#1f77b4", "#9467bd"],
-)
-color = alt.Color("season:N", scale=scale)
-
-brush = alt.selection_interval(encodings=["x"])
-click = alt.selection_point(fields=["season"])
-
-points = (
-    alt.Chart(hour)
-    .mark_point()
-    .encode(
-        x=alt.X("temp_c:Q", title="Daily Temperature (°C)"),
-        y=alt.Y("cnt:Q", title="Bike Rentals Count"),
-        color=alt.condition(brush, color, alt.value("lightgray")),
-        size=alt.Size("atemp_c:Q", title="Feels-like Temp (°C)"),
-        tooltip=["temp_c", "atemp_c", "cnt", "season"],
-    )
-    .properties(width=550, height=300)
-    .add_params(brush)
-    .transform_filter(click)
-)
-
-bars = (
-    alt.Chart(hour)
-    .mark_bar()
-    .encode(
-        x="cnt:N",
-        y="season:N",
-        color=alt.condition(click, color, alt.value("lightgray")),
-    )
-    .transform_filter(brush)
-    .properties(width=550, height=170)
-    .add_params(click)
-)
-
-chart = alt.vconcat(points, bars, title="Bike Rentals Count corresponding to different temperatures")
-st.altair_chart(chart, use_container_width=True)
-
-st.scatter_chart(
-    hour,
-    x="cnt",
-    y=["hum", "windspeed"],
-    color=["#FF0000", "#0000FF"],
-    x_label="Bike Rental Count",
-    y_label="Humidity & Windspeed",
-    height=400
-)
-
-# ---------------------------
-# Prediction Section
-# ---------------------------
-st.header("🚀 Bike Rentals Predictor")
-
-# Season selector
-season_dict = {1: "Spring 🌸", 2: "Summer ☀️", 3: "Fall 🍂", 4: "Winter ❄️"}
-season = st.selectbox("Select a season:", options=list(season_dict.keys()), format_func=lambda x: season_dict[x])
-st.markdown(f"<h3 style='color:#2E86AB;'>Selected season: {season_dict[season]}</h3>", unsafe_allow_html=True)
-
-# Year selector
-year = st.selectbox("Select a year:", options=[2011, 2012])
-st.markdown(f"<h3 style='color:#2E86AB;'>Selected year: {year}</h3>", unsafe_allow_html=True)
-
-# Hour selector
-col1, col2 = st.columns([1, 2])
-with col1:
-    hour = st.number_input("Enter hour (0–23):", min_value=0, max_value=23, value=0, step=1)
-with col2:
-    clock_emojis = {0: "🕛", 12: "🕛", 1: "🕐", 13: "🕐", 2: "🕑", 14: "🕑", 3: "🕒", 15: "🕒", 4: "🕓", 16: "🕓", 5: "🕔", 17: "🕔", 6: "🕕", 18: "🕕", 7: "🕖", 19: "🕖", 8: "🕗", 20: "🕗", 9: "🕘", 21: "🕘", 10: "🕙", 22: "🕙", 11: "🕚", 23: "🕚"}
-    if hour == 0:
-        hour_display = 12; period = "AM"
-    elif hour < 12:
-        hour_display = hour; period = "AM"
-    elif hour == 12:
-        hour_display = 12; period = "PM"
-    else:
-        hour_display = hour - 12; period = "PM"
-    emoji = clock_emojis.get(hour, "❓")
-    st.markdown(f"<h3 style='font-size:24px;'>{hour_display}:00 {period} {emoji}</h3>", unsafe_allow_html=True)
-
-# Month selector
-month_dict = {1: "January 🕛", 2: "February 🕐", 3: "March 🕒", 4: "April 🌱", 5: "May 🌼", 6: "June ☀️", 7: "July ☀️", 8: "August 🌞", 9: "September 🍂", 10: "October 🎃", 11: "November 🍁", 12: "December 🎄"}
-month = st.selectbox("Select a month:", options=list(month_dict.keys()), format_func=lambda x: month_dict[x])
-st.markdown(f"<h3 style='color:#FF6347;'>Selected month: {month_dict[month]}</h3>", unsafe_allow_html=True)
-
-# Weekday selector
-weekday = st.selectbox("Select weekday:", options=list(range(0, 7)), format_func=lambda x: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][x])
-
-# Holiday selector
-holiday = st.selectbox("Is it a holiday day?", options=[0, 1], format_func=lambda x: "No ❌" if x == 0 else "Yes ✅")
-
-# Weather situation selector
-weathersit_dict = {1: "Clear, Few clouds ☀️", 2: "Mist + Cloudy ☁️", 3: "Light Snow 🌦", 4: "Heavy Rain ⛈"}
-weathersit = st.selectbox("Weather situation:", options=list(weathersit_dict.keys()), format_func=lambda x: weathersit_dict[x])
-
-# Other inputs
-temp = st.number_input("Temperature (0 to 1):", min_value=0.0, max_value=1.0, value=0.5, step=0.01)
-atemp = st.number_input("Feels like temperature (0 to 1):", min_value=0.0, max_value=1.0, value=0.5, step=0.01)
-hum = st.number_input("Humidity (0 to 1):", min_value=0.0, max_value=1.0, value=0.5, step=0.01)
-windspeed = st.number_input("Windspeed (0 to 1):", min_value=0.0, max_value=1.0, value=0.5, step=0.01)
-registered = st.number_input("Registered bike users:", min_value=0.0, max_value=10000.0, value=0.5, step=0.01)
-
-# ---------------------------
+# -------------------------------
 # Load Model
-# ---------------------------
-@st.cache_resource
-def load_model():
-    with open("/home/vibhuti/Documents/lasso_model.pkl", "rb") as file:
-        return pickle.load(file)
+# -------------------------------
+MODEL_PATH = "models/tuned_xgb_hour_model.joblib"
+try:
+    model = joblib.load(MODEL_PATH, mmap_mode='r')
+except Exception as e:
+    st.error(f"Failed to load model: {e}")
+    st.stop()
 
-model = load_model()
+# -------------------------------
+# Load Historical Data
+# -------------------------------
+HISTORICAL_PATH = "hour.csv"
+hour_data = pd.read_csv(HISTORICAL_PATH)
+hour_data['dteday'] = pd.to_datetime(hour_data['dteday'])
+hourly_avg = hour_data.groupby('hr')['cnt'].mean()
 
-# ---------------------------
-# Prediction Button
-# ---------------------------
-st.subheader("🚀 Predict Bike Rentals")
+# -------------------------------
+# App Header
+# -------------------------------
+st.markdown("""
+<h1 style='text-align:center; color:red; font-size:48px; font-weight:bold'>
+🚴 AI RideWise — Predict Your Next Bike Ride!
+</h1>
+<p style='text-align:center; font-size:20px; color:#0b0b0b'>
+Forecast hourly bike rentals based on <b>weather</b>, <b>time</b>, and <b>city patterns</b>.
+</p>
+<hr>
+""", unsafe_allow_html=True)
 
-def part_of_day(hour):
-    if 6 <= hour < 10:
-        return "morning"
-    elif 10 <= hour < 17:
-        return "noon"
-    elif 17 <= hour < 21:
-        return "evening"
-    else:
-        return "night"
+# -------------------------------
+# Inputs in 3 Columns
+# -------------------------------
+col1, col2, col3 = st.columns(3)
 
-input_df = pd.DataFrame({
-    "season": [season],
-    "yr": [year],
-    "mnth": [month],
-    "holiday": [holiday],
-    "hr": [hour],
-    "weekday": [weekday],
-    "weathersit": [weathersit],
-    "temp": [temp],
-    "atemp": [atemp],
-    "hum": [hum],
-    "windspeed": [windspeed],
-    "registered": [registered]
-})
+with col1:
+    selected_date = st.date_input("Select Date", datetime.date(2012, 1, 1))
+    hr = st.slider("Hour of Day", 0, 23, 12)
+    weekday = selected_date.strftime("%A")
+    season = st.selectbox("Season", ["Spring","Summer","Fall","Winter"])
 
-input_df["part_of_day"] = input_df["hr"].apply(part_of_day)
-input_df["working_hr_interaction"] = input_df["weekday"] * input_df["hr"]
-input_df["bad_weather_flag"] = input_df["weathersit"].apply(lambda x: 1 if x >= 3 else 0)
+with col2:
+    holiday = st.selectbox("Holiday", ["No","Yes"])
+    workingday = st.selectbox("Working Day", ["No","Yes"])
+    weathersit = st.selectbox("Weather Situation", ["Clear/Cloudy", "Mist", "Light Rain/Snow", "Heavy Rain/Snow"])
+    temp = st.slider("Temperature (0-1)", 0.0, 1.0, 0.5, 0.01)
+    atemp = st.slider("Feels-like Temp (0-1)", 0.0, 1.0, 0.5, 0.01)
 
-if st.button("Predict"):
-    prediction = model.predict(input_df)
-    st.success(f"📊 Predicted Bike Rentals: {prediction[0]:.2f}")
+with col3:
+    hum = st.slider("Humidity (0-1)", 0.0, 1.0, 0.5, 0.01)
+    windspeed = st.slider("Windspeed (0-1)", 0.0, 0.3, 0.1, 0.01)
+
+# -------------------------------
+# Feature Engineering
+# -------------------------------
+weekday_num = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"].index(weekday)
+holiday_num = 1 if holiday=="Yes" else 0
+workingday_num = 1 if workingday=="Yes" else 0
+
+sin_month = np.sin(2*np.pi*selected_date.month/12)
+cos_month = np.cos(2*np.pi*selected_date.month/12)
+sin_weekday = np.sin(2*np.pi*weekday_num/7)
+cos_weekday = np.cos(2*np.pi*weekday_num/7)
+sin_hour = np.sin(2*np.pi*hr/24)
+cos_hour = np.cos(2*np.pi*hr/24)
+
+trend = (selected_date - hour_data['dteday'].min().date()).days
+
+season_map = {"Spring":0,"Summer":0,"Fall":0,"Winter":0}
+season_map[season] = 1
+season_2, season_3, season_4 = season_map["Summer"], season_map["Fall"], season_map["Winter"]
+
+weathersit_map = {"Clear/Cloudy":0, "Mist":0, "Light Rain/Snow":0, "Heavy Rain/Snow":0}
+weathersit_map[weathersit] = 1
+weathersit_2, weathersit_3, weathersit_4 = weathersit_map["Mist"], weathersit_map["Light Rain/Snow"], weathersit_map["Heavy Rain/Snow"]
+
+features = [
+    selected_date.year, selected_date.month, holiday_num, weekday_num, workingday_num,
+    temp, atemp, hum, windspeed,
+    selected_date.year, selected_date.month, hr,
+    sin_month, cos_month, sin_weekday, cos_weekday, sin_hour, cos_hour,
+    trend,
+    season_2, season_3, season_4,
+    weathersit_2, weathersit_3, weathersit_4
+]
+features = np.array(features).reshape(1,-1)
+
+# -------------------------------
+# Predict Button & Display
+# -------------------------------
+st.markdown("<div style='text-align:center'>", unsafe_allow_html=True)
+predict_clicked = st.button("Predict Hourly Ride Count")
+st.markdown("</div>", unsafe_allow_html=True)
+
+if predict_clicked:
+    with st.spinner("Predicting..."):
+        try:
+            prediction = model.predict(features)
+            predicted_count = int(prediction[0])
+
+            st.markdown(f"""
+            <div style='text-align:center; background-color:#f0f0f0; padding:20px; border-radius:15px; margin-top:20px'>
+            <h2 style='font-size:64px; color:#0b0b0b'>{predicted_count}</h2>
+            <p style='font-size:18px; color:#0b0b0b'>Predicted bike rentals for the selected hour</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            col1_graph, col2_graph = st.columns(2)
+
+            with col1_graph:
+                fig, ax = plt.subplots(figsize=(7,4))
+                ax.plot(hourly_avg.index, hourly_avg.values, label="Historical Avg", marker='o')
+                ax.scatter(hr, predicted_count, color='red', s=100, label="Predicted")
+                ax.set_xlabel("Hour")
+                ax.set_ylabel("Bike Rentals")
+                ax.set_title("Predicted vs Historical Avg")
+                ax.legend()
+                st.pyplot(fig)
+
+            with col2_graph:
+                importances = model.feature_importances_
+                feat_names = ["yr","mnth","holiday","weekday","workingday",
+                              "temp","atemp","hum","windspeed",
+                              "yr2","mnth2","hr2",
+                              "sin_month","cos_month","sin_weekday","cos_weekday","sin_hour","cos_hour",
+                              "trend",
+                              "season_s","season_f","season_w",
+                              "weathersit_mist","weathersit_lightsnow","weathersit_heavysnow"]
+                sorted_idx = np.argsort(importances)
+                fig, ax = plt.subplots(figsize=(7,5))
+                ax.barh(np.array(feat_names)[sorted_idx], importances[sorted_idx], color="#0b6b3a")
+                ax.set_title("Feature Importance")
+                st.pyplot(fig)
+
+        except Exception as e:
+            st.error(f"Prediction failed: {e}")
