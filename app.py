@@ -1,4 +1,4 @@
-# Add render_template to the first line
+
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import pandas as pd
@@ -6,12 +6,12 @@ import numpy as np
 import joblib
 from datetime import datetime
 
-# Initialize the Flask application
+
 app = Flask(__name__)
-# Enable CORS to allow requests from the frontend
+
 CORS(app)
 
-# --- Load Trained Model and Supporting Files ---
+
 try:
     print("Loading model and required files...")
     lgb_model = joblib.load('lgb_model.pkl')
@@ -22,19 +22,15 @@ except FileNotFoundError:
     print("Error: Model files not found! Please run train_model.py first.")
     exit()
 
-# --- NEW: ADD A ROUTE TO SERVE THE HTML PAGE ---
+
 @app.route('/')
 def home():
     """Renders the main HTML page."""
     return render_template('index.html')
-# ---------------------------------------------
 
-# --- Define the Prediction Function ---
 def create_features_and_predict(data):
-    """
-    Takes a dictionary of input data, engineers features, and returns a prediction.
-    """
-    # Extract data from the request
+    
+    
     date_str = data.get('date', '2025-09-18')
     time_str = data.get('time', '18:00')
     temp_celsius = float(data.get('temp', 25.0))

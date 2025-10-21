@@ -6,10 +6,7 @@ import lightgbm as lgb
 import joblib
 
 def preprocess_and_train(df_hour):
-    """
-    Preprocesses the bike sharing data, trains a LightGBM model,
-    and saves the model, scaler, and column names to disk.
-    """
+   
     # --- Feature Engineering ---
     print("Starting feature engineering...")
     # Part of day
